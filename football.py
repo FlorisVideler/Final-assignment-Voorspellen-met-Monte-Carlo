@@ -3,9 +3,10 @@ from tabulate import tabulate
 
 
 class Team:
-    def __init__(self, name, odds):
+    def __init__(self, name, odds, goals):
         self.name = name
         self.odds = odds
+        self.goals = goals
         self.check_probabilities()
         self.odds_as_list = self.probabilities_to_list()
 
@@ -25,19 +26,23 @@ class Team:
 
 
 class Tournament:
-    def __init__(self, teams, n):
+    def __init__(self, teams, n, rng):
         self.teams = teams
         self.matches = []
         self.schedule_matches()
-        self.results = self.init_results()
+        self.results, self.goal_diff = self.init_results()
         self.n = n
         self.all_results = {}
+        self.all_goal_diff = {}
+        self.rng = rng
 
     def init_results(self):
         results = {}
+        goal_diff = {}
         for i in self.teams:
             results[i.name] = 0
-        return results
+            goal_diff[i.name] = 0
+        return results, goal_diff
 
     def schedule_matches(self):
         for i in self.teams:
@@ -57,7 +62,7 @@ class Tournament:
 
     def play_match(self, home, away):
         # Voor nu nog ff np random
-        result = home.odds_as_list[away.name][int(np.floor(np.random.rand() * 100))]
+        result = home.odds_as_list[away.name][self.rng.randomly()]
         if result == 0:
             self.results[home.name] += 3
         elif result == 1:
@@ -66,11 +71,25 @@ class Tournament:
         else:
             self.results[away.name] += 3
 
+        # Goals
+        # self.poisson_goals(home, away)
+
+    def poisson_goals(self, home, away):
+        home_scores_mean = (home.goals['HS'] + away.goals['AC']) / 2
+        away_scores_mean = (home.goals['HC'] + away.goals['AS']) / 2
+        home_scored = np.random.poisson(home_scores_mean, 1)[0]
+        away_scored = np.random.poisson(away_scores_mean, 1)[0]
+        # print(home.name, away.name, home_scored, away_scored)
+        self.goal_diff[home.name] += (home_scored - away_scored)
+        self.goal_diff[away.name] += (away_scored - home_scored)
+        return home_scored, away_scored
+
     def batch_run(self):
         for i in range(self.n):
             self.play_all_matches()
             self.parse_results(i)
-            self.results = self.init_results()
+            # print(self.goal_diff)
+            self.results, self.goal_diff = self.init_results()
 
     def parse_results(self, run):
         tournament_result = {k: v for k, v in sorted(self.results.items(), key=lambda item: item[1], reverse=True)}
@@ -95,5 +114,6 @@ class Tournament:
             for j in places:
                 table_row.append(f'{round(places[j].count(i.name) / amount_of_tournaments_played * 100, 2)}%')
             table.append(table_row)
-        print(f'After playing {amount_of_tournaments_played} tournaments this are the results:')
+        print(f'After playing {amount_of_tournaments_played} tournaments using the {self.rng.name} this are the results:')
         print(tabulate(table, headers=headers))
+        print('\n')
