@@ -34,43 +34,10 @@ ODDS = {
     }
 }
 
-GOALS = {
-    'Ajax': {
-        'HS': 3.2,
-        'HC': 0.9,
-        'AS': 3.1,
-        'AC': 0.6
-    },
-    'Feyenood': {
-        'HS': 2.4,
-        'HC': 1.1,
-        'AS': 2.2,
-        'AC': 0.8
-    },
-    'PSV': {
-        'HS': 2.1,
-        'HC': 0.7,
-        'AS': 1.8,
-        'AC': 1.3
-    },
-    'FC Utrecht': {
-        'HS': 1.9,
-        'HC': 1.2,
-        'AS': 3,
-        'AC': 2.4
-    },
-    'Willem II': {
-        'HS': 1.4,
-        'HC': 1.7,
-        'AS': 1,
-        'AC': 1.5
-    }
-}
-
 # make teams
 teams = []
 for i in ODDS:
-    t = Team(i, ODDS[i], GOALS[i])
+    t = Team(i, ODDS[i])
     teams.append(t)
 
 tour = Tournament(teams, 10000, NumpyRandomly())
